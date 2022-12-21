@@ -18,11 +18,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [16]
+        
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: ${{matrix.node-verison}}
       - run: npm ci
       - run: npm test
 
@@ -35,7 +40,19 @@ jobs:
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
+      - name: Installing dependencies
+        run: |
+          npm ci
+      - name: Build the app
+        run: |
+          npm run build 
+      - name: Run component test
+        run: |
+          npm run test
+      - name: Start the app
+        run: |
+          npm start &
+          npx wait-on --timeout 60000
+          
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
